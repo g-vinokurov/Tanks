@@ -6,7 +6,7 @@ pygame.init()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-TILE_SIZE = 20
+TILE_SIZE = 50
 TANK_SIZE = TILE_SIZE * 2
 
 visible_world_width = 25
@@ -47,12 +47,12 @@ class Tank:
         self.y = TILE_SIZE * y + TILE_SIZE // 2
 
         self.direction = Direction.Right
-        self.speed = 3
+        self.speed = TILE_SIZE / 6
         self.on_move = False
     
     def render(self, screen):
-        self.rect.centerx = self.x
-        self.rect.centery = self.y
+        self.rect.centerx = round(self.x)
+        self.rect.centery = round(self.y)
         tile = pygame.transform.rotate(
             self.tile, 
             self.direction.value
