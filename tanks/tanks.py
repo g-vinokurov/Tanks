@@ -1,5 +1,4 @@
 import pygame
-from random import randint
 from enum import Enum
 
 pygame.init()
@@ -18,12 +17,10 @@ SCREEN_H = TILE_SIZE * visible_world_height
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 
 grass = pygame.image.load('tiles/grass.png')
-ground = pygame.image.load('tiles/ground.png')
 stone = pygame.image.load('tiles/stone.png')
 water = pygame.image.load('tiles/water.png')
 
 grass = pygame.transform.scale(grass, (TILE_SIZE, TILE_SIZE))
-ground = pygame.transform.scale(ground, (TILE_SIZE, TILE_SIZE))
 stone = pygame.transform.scale(stone, (TILE_SIZE, TILE_SIZE))
 water = pygame.transform.scale(water, (TILE_SIZE, TILE_SIZE))
 
@@ -93,7 +90,6 @@ y_shift = 0
 
 name_to_tile = {
     'grass': grass,
-    'ground': ground,
     'stone': stone,
     'water': water
 }
