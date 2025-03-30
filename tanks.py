@@ -156,7 +156,9 @@ while run:
         if event.type == pygame.KEYUP:
             if event.key in ARROWS:
                 tank.on_move = False
-        
+    
+    tank.move()
+    enemy.move()
     
     screen.fill(BLACK)
     
@@ -170,11 +172,8 @@ while run:
             cell = world[i + y_shift][j + x_shift]
             if cell is not None:
                 screen.blit(cell, (x, y))
-    
-    tank.move()
-    tank.render(screen)
 
-    enemy.move()
+    tank.render(screen)
     enemy.render(screen)
     
     pygame.time.delay(25)
