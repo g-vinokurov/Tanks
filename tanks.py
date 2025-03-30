@@ -49,6 +49,9 @@ class Tank:
         self.direction = Direction.Right
         self.speed = TILE_SIZE / 6
         self.on_move = False
+
+
+class PlayerTank(Tank):
     
     def render(self, screen):
         self.rect.centerx = round(self.x)
@@ -92,11 +95,34 @@ class Tank:
                 x_shift += self.speed
             else:
                 self.x += self.speed
-            
 
 
-tank = Tank('tank-1.png', 3, 3)
-enemy = Tank('tank-2-enemy.png', 21, 21)
+class EnemyTank(Tank):
+
+    def render(self, screen):
+        self.rect.centerx = round(self.x - x_shift)
+        self.rect.centery = round(self.y - y_shift)
+        tile = pygame.transform.rotate(
+            self.tile, 
+            self.direction.value
+        )
+        screen.blit(tile, self.rect)
+    
+    def move(self):
+        if not self.on_move:
+            return
+        if self.direction == Direction.Up:
+            self.y -= self.speed
+        if self.direction == Direction.Down:
+            self.y += self.speed
+        if self.direction == Direction.Left:
+            self.x -= self.speed
+        if self.direction == Direction.Right:
+            self.x += self.speed
+
+
+tank = PlayerTank('tank-1.png', 3, 3)
+enemy = EnemyTank('tank-2-enemy.png', 21, 21)
 
 world_height = 25
 world_width = 25
