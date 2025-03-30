@@ -6,11 +6,11 @@ pygame.init()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-TILE_SIZE = 50
+TILE_SIZE = 36
 TANK_SIZE = TILE_SIZE * 2
 
-visible_world_width = 25
-visible_world_height = 25
+visible_world_width = 15
+visible_world_height = 15
 
 SCREEN_W = TILE_SIZE * visible_world_width
 SCREEN_H = TILE_SIZE * visible_world_height
@@ -60,16 +60,39 @@ class Tank:
         screen.blit(tile, self.rect)
     
     def move(self):
+        global world
+        global x_shift, y_shift
+
+        WORLD_H = world_height * TILE_SIZE
+        WORLD_W = world_width * TILE_SIZE
+
         if not self.on_move:
             return
+        
         if self.direction == Direction.Up:
-            self.y -= self.speed
+            if self.y <= SCREEN_H / 2 and y_shift - self.speed >= 0:
+                y_shift -= self.speed
+            else:
+                self.y -= self.speed
+        
         if self.direction == Direction.Down:
-            self.y += self.speed
+            if self.y >= SCREEN_H / 2 and y_shift + self.speed <= WORLD_H - SCREEN_H:
+                y_shift += self.speed
+            else:
+                self.y += self.speed
+        
         if self.direction == Direction.Left:
-            self.x -= self.speed
+            if self.x <= SCREEN_W / 2 and x_shift - self.speed >= 0:
+                x_shift -= self.speed
+            else:
+                self.x -= self.speed
+        
         if self.direction == Direction.Right:
-            self.x += self.speed
+            if self.x >= SCREEN_W / 2 and x_shift + self.speed <= WORLD_W - SCREEN_W:
+                x_shift += self.speed
+            else:
+                self.x += self.speed
+            
 
 
 tank = Tank('tank-1.png', 3, 3)
@@ -162,14 +185,14 @@ while run:
     
     screen.fill(BLACK)
     
-    for i in range(visible_world_height):
-        for j in range(visible_world_width):
-            x = j * TILE_SIZE
-            y = i * TILE_SIZE
+    for i in range(world_height):
+        for j in range(world_width):
+            x = j * TILE_SIZE - x_shift
+            y = i * TILE_SIZE - y_shift
             
             screen.blit(default_tile, (x, y))
 
-            cell = world[i + y_shift][j + x_shift]
+            cell = world[i][j]
             if cell is not None:
                 screen.blit(cell, (x, y))
 
