@@ -34,14 +34,21 @@ class Direction(Enum):
     Right = 0
 
 
-class Tank:
+class Tank(pygame.sprite.Sprite):
     def __init__(self, tile, x, y):
         self.tile = pygame.image.load(f'tiles/{tile}')
         self.w = TANK_SIZE
         self.h = TANK_SIZE
         self.size = (self.w, self.h)
 
-        self.tile = pygame.transform.scale(self.tile, self.size)
+        self.original_tile = pygame.transform.scale(
+            self.tile, self.size
+        )
+        self.tile = pygame.transform.scale(
+            self.tile, self.size
+        )
+        self.mask = pygame.mask.from_surface(self.tile)
+
         self.rect = self.tile.get_rect()
         self.x = TILE_SIZE * x + TILE_SIZE // 2
         self.y = TILE_SIZE * y + TILE_SIZE // 2
@@ -55,11 +62,15 @@ class Tank:
     
     def render(self, screen):
         self.update_rect()
-        tile = pygame.transform.rotate(
-            self.tile, 
+        screen.blit(self.tile, self.rect)
+    
+    def change_direction(self, direction: Direction):
+        self.direction = direction
+        self.tile = pygame.transform.rotate(
+            self.original_tile, 
             self.direction.value
         )
-        screen.blit(tile, self.rect)
+        self.mask = pygame.mask.from_surface(self.tile)
 
 
 class PlayerTank(Tank):
@@ -193,13 +204,13 @@ while run:
         
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                tank.direction = Direction.Up
+                tank.change_direction(Direction.Up)
             if event.key == pygame.K_DOWN:
-                tank.direction = Direction.Down
+                tank.change_direction(Direction.Down)
             if event.key == pygame.K_LEFT:
-                tank.direction = Direction.Left
+                tank.change_direction(Direction.Left)
             if event.key == pygame.K_RIGHT:
-                tank.direction = Direction.Right
+                tank.change_direction(Direction.Right)
             
         if event.type == pygame.KEYDOWN:
             if event.key in ARROWS:
