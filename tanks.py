@@ -34,42 +34,68 @@ class Direction(Enum):
     Right = 0
 
 
+# Класс Tank унаследован от класса Sprite из модуля sprite библиотеки pygame
+# То есть часть возможностей, которые имеет класс Sprite,
+# становятся доступными для класса Tank
+# Это позволит нам более качественно отслеживать столкновения
 class Tank(pygame.sprite.Sprite):
     def __init__(self, tile, x, y):
+        # Загрузили тайл как картинку
         self.tile = pygame.image.load(f'tiles/{tile}')
+        # Установили размеры тайла
         self.w = TANK_SIZE
         self.h = TANK_SIZE
         self.size = (self.w, self.h)
-
+        
+        # Масштабировали наш тайл до нужного размера
+        # И сохранили его оригинальный вариант
         self.original_tile = pygame.transform.scale(
             self.tile, self.size
         )
+        # Создали точно также копию тайла, которая будет меняться в процессе игры
         self.tile = pygame.transform.scale(
             self.tile, self.size
         )
+        # Для тайла сделали битовую маску
+        # То есть, прозрачные пиксели - это 0, не прозрачные - 1
         self.mask = pygame.mask.from_surface(self.tile)
-
+        
+        # Для тайла получили прямоугольник, который его "обрамляет"
+        # Прямоугольник (Rect) - объект, имеющий высоту и ширину тайла,
+        # А также имеющий свои координаты, которые мы можем менять
         self.rect = self.tile.get_rect()
         self.x = TILE_SIZE * x + TILE_SIZE // 2
         self.y = TILE_SIZE * y + TILE_SIZE // 2
-
+        
+        # Проинициализировали поле direction значением Right перечисления Direction
         self.direction = Direction.Right
+        # Установили скорость, равную 1/6 размера тайла 
+        # (чтобы не зависеть от масштаба экран)
         self.speed = TILE_SIZE / 6
+        # Флаг on_move - есть True, когда танк едет, и False - когда стоит
         self.on_move = False
     
     def update_rect(self):
+        # Обновляет координаты поля self.rect
+        # Для базового класса Tank метод ничего не делает
         pass
     
     def render(self, screen):
+        # Перед отрисовкой на всякий случай вызывает метод update_rect
+        # Если update_rect определен в дочернем классе, то вызывается имеено он -
+        # метод дочернего класса
         self.update_rect()
         screen.blit(self.tile, self.rect)
     
     def change_direction(self, direction: Direction):
+        # Меняем значение поля direction
         self.direction = direction
+        # Поворачиваем наш тайл (без изменения оригинального тайла)
         self.tile = pygame.transform.rotate(
             self.original_tile, 
             self.direction.value
         )
+        # Обновляем маску (т.к. поменялось расположение пикселей)
         self.mask = pygame.mask.from_surface(self.tile)
 
 
