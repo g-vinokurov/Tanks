@@ -1,6 +1,8 @@
 import pygame
 from enum import Enum
 
+import pygame.sprite
+
 pygame.init()
 
 WHITE = (255, 255, 255)
@@ -34,12 +36,34 @@ class Direction(Enum):
     Right = 0
 
 
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, image, i, j):
+        super().__init__()
+        self.image = image
+        self.i = i
+        self.j = j
+
+        self.rect = image.get_rect()
+        self.x = j * TILE_SIZE
+        self.y = i * TILE_SIZE
+
+        self.mask = pygame.mask.from_surface(self.image)
+    
+    def update(self):
+        global x_shift, y_shift
+        self.x = self.j * TILE_SIZE - x_shift
+        self.y = self.i * TILE_SIZE - y_shift
+        self.rect.x = round(self.x)
+        self.rect.y = round(self.y)
+
+
 # Класс Tank унаследован от класса Sprite из модуля sprite библиотеки pygame
 # То есть часть возможностей, которые имеет класс Sprite,
 # становятся доступными для класса Tank
 # Это позволит нам более качественно отслеживать столкновения
 class Tank(pygame.sprite.Sprite):
     def __init__(self, tile, x, y):
+        pygame.sprite.Sprite.__init__(self)
         # Загрузили тайл как картинку
         self.tile = pygame.image.load(f'tiles/{tile}')
         # Установили размеры тайла
@@ -49,63 +73,52 @@ class Tank(pygame.sprite.Sprite):
         
         # Масштабировали наш тайл до нужного размера
         # И сохранили его оригинальный вариант
-        self.original_tile = pygame.transform.scale(
+        self.original_image = pygame.transform.scale(
             self.tile, self.size
         )
-        # Создали точно также копию тайла, которая будет меняться в процессе игры
-        self.tile = pygame.transform.scale(
+        # Создали точно также копию тайла, 
+        # которая будет меняться в процессе игры
+        self.image = pygame.transform.scale(
             self.tile, self.size
         )
         # Для тайла сделали битовую маску
-        # То есть, прозрачные пиксели - это 0, не прозрачные - 1
-        self.mask = pygame.mask.from_surface(self.tile)
+        # Т.е, прозрачные пиксели - это 0, непрозрачные - 1
+        # 
+        self.mask = pygame.mask.from_surface(self.image)
         
-        # Для тайла получили прямоугольник, который его "обрамляет"
-        # Прямоугольник (Rect) - объект, имеющий высоту и ширину тайла,
-        # А также имеющий свои координаты, которые мы можем менять
-        self.rect = self.tile.get_rect()
+        # Для тайла получили Rect, который его "обрамляет"
+        # Rect - прямоугольник, имеющий высоту и ширину тайла,
+        # А также свои координаты, которые мы можем менять
+        self.rect = self.image.get_rect()
         self.x = TILE_SIZE * x + TILE_SIZE // 2
         self.y = TILE_SIZE * y + TILE_SIZE // 2
+
+        self.rect.centerx = round(self.x)
+        self.rect.centery = round(self.y)
         
         # Проинициализировали поле direction значением Right перечисления Direction
         self.direction = Direction.Right
         # Установили скорость, равную 1/6 размера тайла 
         # (чтобы не зависеть от масштаба экран)
         self.speed = TILE_SIZE / 6
-        # Флаг on_move - есть True, когда танк едет, и False - когда стоит
+        # Флаг on_move - есть True, когда танк едет, 
+        # и False - когда стоит
         self.on_move = False
-    
-    def update_rect(self):
-        # Обновляет координаты поля self.rect
-        # Для базового класса Tank метод ничего не делает
-        pass
-    
-    def render(self, screen):
-        # Перед отрисовкой на всякий случай вызывает метод update_rect
-        # Если update_rect определен в дочернем классе, то вызывается имеено он -
-        # метод дочернего класса
-        self.update_rect()
-        screen.blit(self.tile, self.rect)
     
     def change_direction(self, direction: Direction):
         # Меняем значение поля direction
         self.direction = direction
-        # Поворачиваем наш тайл (без изменения оригинального тайла)
-        self.tile = pygame.transform.rotate(
-            self.original_tile, 
+        # Поворачиваем наш тайл (без изменения оригинала)
+        self.image = pygame.transform.rotate(
+            self.original_image, 
             self.direction.value
         )
-        # Обновляем маску (т.к. поменялось расположение пикселей)
-        self.mask = pygame.mask.from_surface(self.tile)
+        # Обновляем маску (т.к. поменялось положение пикселей)
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class PlayerTank(Tank):
-
-    def update_rect(self):
-        self.rect.centerx = round(self.x)
-        self.rect.centery = round(self.y)
-
-    def move(self):
+    def update(self):
         global world
         global x_shift, y_shift
 
@@ -139,18 +152,19 @@ class PlayerTank(Tank):
             else:
                 self.x += self.speed
         
-        self.update_rect()
+        self.rect.centerx = round(self.x)
+        self.rect.centery = round(self.y)
 
 
 class EnemyTank(Tank):
 
-    def update_rect(self):
+    def update(self):
         self.rect.centerx = round(self.x - x_shift)
         self.rect.centery = round(self.y - y_shift)
-    
-    def move(self):
+
         if not self.on_move:
             return
+        
         if self.direction == Direction.Up:
             self.y -= self.speed
         if self.direction == Direction.Down:
@@ -159,6 +173,9 @@ class EnemyTank(Tank):
             self.x -= self.speed
         if self.direction == Direction.Right:
             self.x += self.speed
+        
+        self.rect.centerx = round(self.x - x_shift)
+        self.rect.centery = round(self.y - y_shift)
 
 
 tank = PlayerTank('tank-1.png', 3, 3)
@@ -167,12 +184,21 @@ enemy = EnemyTank('tank-2-enemy.png', 21, 21)
 world_height = 25
 world_width = 25
 
-world = []
+ground = pygame.sprite.Group()
+
 for i in range(world_height):
-    row = []
     for j in range(world_width):
-        row.append(None)
-    world.append(row)
+        tile = Tile(default_tile, i, j)
+        ground.add(tile)
+
+world = pygame.sprite.Group()
+
+# world = []
+# for i in range(world_height):
+#     row = []
+#     for j in range(world_width):
+#         row.append(None)
+#     world.append(row)
 
 x_shift = 0
 y_shift = 0
@@ -198,13 +224,14 @@ def load_world():
     world_size = world_info.strip().split()
     world_width = int(world_size[0])
     world_height = int(world_size[1])
-
-    world = []
-    for i in range(world_height):
-        row = []
-        for j in range(world_width):
-            row.append(None)
-        world.append(row)
+    
+    world = pygame.sprite.Group()
+    # world = []
+    # for i in range(world_height):
+    #     row = []
+    #     for j in range(world_width):
+    #         row.append(None)
+    #     world.append(row)
 
     for line in file:
         line = line.strip()
@@ -212,9 +239,9 @@ def load_world():
 
         i = int(i)
         j = int(j)
-        tile = name_to_tile[tile]
+        image = name_to_tile[tile]
         
-        world[i][j] = tile
+        world.add(Tile(image, i, j))
         
     file.close()
 
@@ -246,24 +273,29 @@ while run:
             if event.key in ARROWS:
                 tank.on_move = False
     
-    tank.move()
-    enemy.move()
+    ground.update()
+    world.update()
+    tank.update()
+    enemy.update()
     
     screen.fill(BLACK)
     
-    for i in range(world_height):
-        for j in range(world_width):
-            x = j * TILE_SIZE - x_shift
-            y = i * TILE_SIZE - y_shift
-            
-            screen.blit(default_tile, (x, y))
+    # for i in range(world_height):
+    #     for j in range(world_width):
+    #         x = j * TILE_SIZE - x_shift
+    #         y = i * TILE_SIZE - y_shift
+    #         
+    #         screen.blit(default_tile, (x, y))
+    # 
+    #         cell = world[i][j]
+    #         if cell is not None:
+    #             screen.blit(cell, (x, y))
 
-            cell = world[i][j]
-            if cell is not None:
-                screen.blit(cell, (x, y))
+    ground.draw(screen)
+    world.draw(screen)
 
-    tank.render(screen)
-    enemy.render(screen)
+    screen.blit(tank.image, tank.rect)
+    screen.blit(enemy.image, enemy.rect)
     
     pygame.time.delay(25)
     pygame.display.update()
