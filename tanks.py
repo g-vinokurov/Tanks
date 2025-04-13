@@ -3,6 +3,9 @@ from enum import Enum
 
 import pygame.sprite
 
+from pygame.sprite import collide_mask
+from pygame.sprite import spritecollideany
+
 pygame.init()
 
 WHITE = (255, 255, 255)
@@ -127,6 +130,11 @@ class PlayerTank(Tank):
 
         if not self.on_move:
             return
+
+        old_x = self.x
+        old_y = self.y
+        old_x_shift = x_shift
+        old_y_shift = y_shift
         
         if self.direction == Direction.Up:
             if self.y <= SCREEN_H / 2 and y_shift - self.speed >= 0:
@@ -154,6 +162,14 @@ class PlayerTank(Tank):
         
         self.rect.centerx = round(self.x)
         self.rect.centery = round(self.y)
+
+        if spritecollideany(self, world, collide_mask):
+            self.x = old_x
+            self.y = old_y
+            x_shift = old_x_shift
+            y_shift = old_y_shift
+            self.rect.centerx = round(self.x)
+            self.rect.centery = round(self.y)
 
 
 class EnemyTank(Tank):
