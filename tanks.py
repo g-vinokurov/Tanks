@@ -107,6 +107,7 @@ class Tank(pygame.sprite.Sprite):
         # Флаг on_move - есть True, когда танк едет, 
         # и False - когда стоит
         self.on_move = False
+        self.on_wall = 0
     
     def change_direction(self, direction: Direction):
         def try_change_direction(direction):
@@ -124,11 +125,13 @@ class Tank(pygame.sprite.Sprite):
             # Обновляем маску (т.к. поменялось положение пикселей)
             self.mask = pygame.mask.from_surface(self.image)
         
-        # Меняем значение поля direction
+        # Сохраняем старое значение
         old_direction = self.direction
-
+        
+        # Меняем значение
         try_change_direction(direction)
         
+        # Если неудачно, возвращаем старое значение
         if spritecollideany(self, walls, collide_mask):
             try_change_direction(old_direction)
 
@@ -139,7 +142,15 @@ class PlayerTank(Tank):
 
         if not self.on_move:
             return
-
+        
+        wall = spritecollideany(self, walls, collide_mask)
+        if wall:
+            self.on_wall += 1
+            if self.on_wall > 50:
+                wall.kill()
+        else:
+            self.on_wall = 0
+            
         old_x = self.x
         old_y = self.y
         old_x_shift = x_shift
