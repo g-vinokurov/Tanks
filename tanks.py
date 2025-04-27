@@ -109,24 +109,28 @@ class Tank(pygame.sprite.Sprite):
         self.on_move = False
     
     def change_direction(self, direction: Direction):
+        def try_change_direction(direction):
+            self.direction = direction
+            # Поворачиваем наш тайл (без изменения оригинала)
+            self.image = pygame.transform.rotate(
+                self.original_image, 
+                self.direction.value
+            )
+            # Обновляем прямоугольник (он у нас повернулся)
+            rect = self.image.get_rect()
+            rect.centerx = self.rect.centerx
+            rect.centery = self.rect.centery
+            self.rect = rect
+            # Обновляем маску (т.к. поменялось положение пикселей)
+            self.mask = pygame.mask.from_surface(self.image)
+        
         # Меняем значение поля direction
-        old_direction = self.direction  
-        self.direction = direction
-        # Поворачиваем наш тайл (без изменения оригинала)
-        self.image = pygame.transform.rotate(
-            self.original_image, 
-            self.direction.value
-        )
-        # Обновляем прямоугольник (он у нас повернулся)
-        rect = self.image.get_rect()
-        rect.centerx = self.rect.centerx
-        rect.centery = self.rect.centery
-        self.rect = rect
-        # Обновляем маску (т.к. поменялось положение пикселей)
-        self.mask = pygame.mask.from_surface(self.image)
+        old_direction = self.direction
 
+        try_change_direction(direction)
+        
         if spritecollideany(self, walls, collide_mask):
-            self.change_direction(old_direction)
+            try_change_direction(old_direction)
 
 
 class PlayerTank(Tank):
