@@ -103,7 +103,7 @@ class Tank(pygame.sprite.Sprite):
         self.direction = Direction.Right
         # Установили скорость, равную 1/6 размера тайла 
         # (чтобы не зависеть от масштаба экран)
-        self.speed = TILE_SIZE / 6
+        self.speed = TILE_SIZE / 12
         # Флаг on_move - есть True, когда танк едет, 
         # и False - когда стоит
         self.on_move = False
